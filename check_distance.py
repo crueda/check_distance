@@ -9,6 +9,8 @@ import datetime
 import time
 import os
 import sys
+from scipy import spatial
+import numpy as np
 
 import MySQLdb as mdb
 
@@ -26,38 +28,32 @@ DB_IP = config['mysql_host']
 DB_PORT = config['mysql_port']
 DB_NAME = config['mysql_db_name']
 DB_USER = config['mysql_user']
-DBPASSWORD = config['mysql_passwd']
+DB_PASSWORD = config['mysql_passwd']
 
-########################################################################
-# definicion y configuracion de logs
-try:
-    logger = logging.getLogger('check_distance')
-    loggerHandler = logging.handlers.TimedRotatingFileHandler(LOG , 'midnight', 1, backupCount=LOG_FOR_ROTATE)
-    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-    loggerHandler.setFormatter(formatter)
-    logger.addHandler(loggerHandler)
-    logger.setLevel(logging.DEBUG)
-except Exception, error:
-    logger.error( '------------------------------------------------------------------')
-    logger.error( '[ERROR] Error writing log at ' + str(error))
-    logger.error( '------------------------------------------------------------------')
-    exit()
-########################################################################
+def main():    
+    con = mdb.connect(DB_IP, DB_USER, DB_PASSWORD, DB_NAME)
 
-def main():
-	con = mdb.connect(DB_IP, DB_USER, DB_PASSWORD, DB_NAME)
+    cur = con.cursor()
+    cur.execute("select LATITUDE, LONGITUDE from STAGE_ROUTE")
 
-	cur = con.cursor()
-	cur.execute("select TRACKING_1.VEHICLE_LICENSE,HEADING,GPS_SPEED,POS_LATITUDE_DEGREE,POS_LATITUDE_MIN,POS_LONGITUDE_DEGREE,POS_LONGITUDE_MIN,POS_DATE from TRACKING_1, HAS where TRACKING_1.VEHICLE_LICENSE = HAS.VEHICLE_LICENSE and HAS.FLEET_ID="+FLEET_ID)
+    print "paso 1:" + str(datetime.datetime.utcnow())
+    L = []
+    numrows = int(cur.rowcount)
+    for i in range(numrows):
+        row = cur.fetchone()
+        L.append(row)
 
-	objects_list = []
+    pt = [47, 5] 
+    print "paso 2:" + str(datetime.datetime.utcnow())
+    L[spatial.KDTree(L).query(pt)[1]]  
+    distance,index = spatial.KDTree(L).query(pt)
 
-	numrows = int(cur.rowcount)
-	for i in range(numrows):
-		row = cur.fetchone()
+    #print distance 
+    #print index
+    #print L[index]
 
+    print "paso 3:" + str(datetime.datetime.utcnow())
 
-		
 
 if __name__ == '__main__':
     main()

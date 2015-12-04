@@ -4,7 +4,7 @@ import numpy as np
 
 A = np.random.random((10,2))*100
 
-#A
+print A
 
 pt = [6, 30]  # <-- the point to find
 
